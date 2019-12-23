@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+        <!--1:导入database.properties文件-->
+        <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+            <property name="location" value="db.properties"/>
+        </bean>
+        <!--2:配置数据源-->
+        <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+            <property name="driverClassName" value="${driver}"></property>
+            <property name="url" value="${url}"></property>
+            <property name="username" value="${username}"></property>
+            <property name="password" value="${password}"></property>
+        </bean>
+        <!--3.配置MyBatis的核心对象SqlSessionFactoryBean-->
+        <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+            <property name="dataSource" ref="dataSource"/>
+            <property name="typeAliasesPackage" value="cn.spring.entity"/>
+            <property name="mapperLocations" value="classpath:cn/spring/dao/mapper/*.xml"/>
+        </bean>
+        <!--4.MyBatis的DAO接口的包扫描器（借助Dao接口生成动态代理）-->
+        <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+            <property name="basePackage" value="cn.spring.dao"/>
+        </bean>
+        <!-- 5.将service实现类对象声明到Spring容器中-->
+        <bean id="iUserService" class="cn.spring.service.Impl.IUserServiceImpl" autowire="byType"/>
+       <!-- 6.完成事务配置-->
+        <!-- transactionManager 事务管理器-->
+        <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+            <property name="dataSource" ref="dataSource"></property>
+        </bean>
+        <!-- 事务通知-->
+        <tx:advice transaction-manager="transactionManager" id="txAdvice">
+            <tx:attributes>
+                <!--get系列方法设置事务的隔离级别和传播行为-->
+                <tx:method name="get*" isolation="READ_COMMITTED" propagation="REQUIRED"/>
+            </tx:attributes>
+        </tx:advice>
+
+</beans>
+
